@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import pymongo
 from bottle import route, run, template, error, static_file, request
@@ -180,5 +181,8 @@ def server_static(filename):
 def error404(error):
     return templates.tpl_404
 
-
-run()
+if os.path.isfile('/sys/hypervisor/uuid') and 'ec2' in subprocess.check_output(['head', '-1', '/sys/hypervisor/uuid']).decode():
+    host = subprocess.check_output(['curl', 'http://169.254.169.254/latest/meta-data/public-hostname']).decode()
+    run(server='auto', host=host, port=8080)
+else:
+    run()

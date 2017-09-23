@@ -93,7 +93,7 @@ def search_person(person):
         ppl = segregate_favourites(ppl)
         res = '''
 '''
-        res += str(ppl).replace('{', '').replace('}', '')
+        res += '''Name: {name}, Age: {age}, Fruits: {fruits}, Vegetables: {veg}'''.format(name=ppl['name'], age=ppl['age'], fruits=ppl['fruits'], veg=ppl['vegetables'])
         return res
     else:
         return '''

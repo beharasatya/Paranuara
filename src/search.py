@@ -1,3 +1,5 @@
+import os
+
 import pymongo
 from bottle import route, run, template, error, static_file, request
 
@@ -169,7 +171,9 @@ def formhandler():
 
 @route('/<filename>')
 def server_static(filename):
-    return static_file(filename, root='/Users/satyabehara/Documents/MS/hivery-backend-challenge-master/src/config')
+    cwd = os.getcwd()
+    root = cwd + '/config'
+    return static_file(filename, root=root)
 
 
 @error(404)
@@ -177,4 +181,4 @@ def error404(error):
     return templates.tpl_404
 
 
-run(host='localhost', port=8080, debug=True)
+run()

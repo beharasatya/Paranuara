@@ -3,7 +3,7 @@ import os
 import pymongo
 from bottle import route, run, template, error, static_file, request
 
-from src.config import settings, templates
+from config import settings, templates
 
 
 def search_company(company):

@@ -2,7 +2,7 @@ import json
 
 import pymongo
 
-from src.config import settings
+from config import settings
 
 try:
     conn = pymongo.MongoClient(

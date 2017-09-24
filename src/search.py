@@ -16,25 +16,30 @@ def search_company(company):
         db = conn[settings.MONGODB_DB]
         ppl_coll = db[settings.MONGODB_PEOPLE]
         cmp_coll = db[settings.MONGODB_COMPANIES]
-
         cmp = cmp_coll.find_one({'company': company})
-        # print(cmp['index'])
+
+        emp_tplt = '''
+Employees of the company {company}:
+
+{txt}'''
+
+        no_emp_tplt = '''
+Company '{c}' has no employees.'''
+
+        no_cmp_tplt = '''
+Company '{c}' doesn't exist.'''
+
         if cmp:
             cmp_id = cmp['index']
             ppl = ppl_coll.find({'company_id': cmp_id})
             if ppl.count() > 0:
                 ppl = [person['name'] for person in ppl]
-                ppl = '''
-Employees of the company {company}:
-
-{txt}'''.format(company=company, txt='\n'.join(ppl))
+                ppl = emp_tplt.format(company=company, txt='\n'.join(ppl))
                 return ppl
             else:
-                return '''
-Company '{c}' has no employees.'''.format(c=company)
+                return no_emp_tplt.format(c=company)
         else:
-            return '''
-Company '{c}' doesn't exist.'''.format(c=company)
+            return no_cmp_tplt.format(c=company)
 
     except pymongo.errors.ServerSelectionTimeoutError:
         return "Sorry!!! Unable to connect to {db}".format(db=settings.MONGODB_DB)
@@ -77,8 +82,8 @@ def get_name_by_index(idx_list):
         db = conn[settings.MONGODB_DB]
         ppl_coll = db[settings.MONGODB_PEOPLE]
         fields = {"name": 1, "_id": 0}
-        ppl = list(ppl_coll.find({'index': {'$in': idx_list}, "eyeColor": "brown", "has_died": False}, fields))
-        # print(ppl)
+        conditions = {'index': {'$in': idx_list}, "eyeColor": "brown", "has_died": False}
+        ppl = list(ppl_coll.find(conditions, fields))
         if ppl:
             ppl = [x['name'] for x in ppl]
         return ppl
@@ -93,7 +98,8 @@ def search_person(person):
         ppl = segregate_favourites(ppl)
         res = '''
 '''
-        res += '''Name: {name}, Age: {age}, Fruits: {fruits}, Vegetables: {veg}'''.format(name=ppl['name'], age=ppl['age'], fruits=ppl['fruits'], veg=ppl['vegetables'])
+        res_tplt = '''Name: {name}, Age: {age}, Fruits: {fruits}, Vegetables: {veg}'''
+        res += res_tplt.format(name=ppl['name'], age=ppl['age'], fruits=ppl['fruits'], veg=ppl['vegetables'])
         return res
     else:
         return '''
@@ -118,23 +124,25 @@ One or Both of the people you searched for do not exist'''
     res = '''
 1st Person: '''
     res += '\n'
-    res += 'Name: {name}, Age: {age}, Address: {address}, phone: {phone}'.format(
+    res_tplt = 'Name: {name}, Age: {age}, Address: {address}, phone: {phone}'
+    res += res_tplt.format(
         name=ppl1['name'], age=ppl1['age'], address=ppl1['address'], phone=ppl1['phone'])
     res += '\n'
     res += '\n'
+
     res += '2nd Person: '
     res += '\n'
-    res += 'Name: {name}, Age: {age}, Address: {address}, phone: {phone}'.format(
+    res += res_tplt.format(
         name=ppl2['name'], age=ppl2['age'], address=ppl2['address'], phone=ppl2['phone'])
 
     common = list(set(friends1).intersection(set(friends2)))
     common = get_name_by_index(common)
     if common:
-        common  = '\n'.join(common)
+        common = '\n'.join(common)
         res += '\n'
         res += '''
 
-Friends in common:
+Friends in common with brown eyes:
 
 {txt}'''.format(txt=common)
     else:
@@ -143,6 +151,7 @@ Friends in common:
 They don't have any friends in common who are alive and have brown eyes'''
 
     return res
+
 
 @route('/')
 @route('/search/')
@@ -157,7 +166,8 @@ def formhandler():
     company = request.forms.get('company').strip()
     ppl = search_company(company)
     print(templates.tpl_form_cmp.format(res_tag=ppl))
-    tpl = templates.tpl_start + templates.tpl_form_cmp.format(res_tag=ppl) + templates.tpl_form_ppl.format(res_tag='') + templates.tpl_end
+    tpl = templates.tpl_start + templates.tpl_form_cmp.format(res_tag=ppl) \
+          + templates.tpl_form_ppl.format(res_tag='') + templates.tpl_end
     return tpl
 
 
@@ -170,7 +180,8 @@ def formhandler():
         res = find_common(ppl1, ppl2)
     else:
         res = search_person(ppl1)
-    tpl = templates.tpl_start + templates.tpl_form_ppl.format(res_tag=res) + templates.tpl_form_cmp.format(res_tag='') + templates.tpl_end
+    tpl = templates.tpl_start + templates.tpl_form_ppl.format(res_tag=res) \
+          + templates.tpl_form_cmp.format(res_tag='') + templates.tpl_end
     return template(tpl)
 
 
@@ -185,7 +196,9 @@ def server_static(filename):
 def error404(error):
     return templates.tpl_404
 
-if os.path.isfile('/sys/hypervisor/uuid') and 'ec2' in subprocess.check_output(['head', '-1', '/sys/hypervisor/uuid']).decode():
+
+if os.path.isfile('/sys/hypervisor/uuid') \
+        and 'ec2' in subprocess.check_output(['head', '-1', '/sys/hypervisor/uuid']).decode():
     host = subprocess.check_output(['curl', 'http://169.254.169.254/latest/meta-data/public-hostname']).decode()
     run(server='auto', host=host, port=8080)
 else:

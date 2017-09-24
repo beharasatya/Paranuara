@@ -165,7 +165,6 @@ def search():
 def formhandler():
     company = request.forms.get('company').strip()
     ppl = search_company(company)
-    print(templates.tpl_form_cmp.format(res_tag=ppl))
     tpl = templates.tpl_start + templates.tpl_form_cmp.format(res_tag=ppl) \
           + templates.tpl_form_ppl.format(res_tag='') + templates.tpl_end
     return tpl

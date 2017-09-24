@@ -77,7 +77,7 @@ def get_name_by_index(idx_list):
         db = conn[settings.MONGODB_DB]
         ppl_coll = db[settings.MONGODB_PEOPLE]
         fields = {"name": 1, "_id": 0}
-        ppl = list(ppl_coll.find({'index': {'$in': idx_list}}, fields))
+        ppl = list(ppl_coll.find({'index': {'$in': idx_list}, "eyeColor": "brown", "has_died": False}, fields))
         # print(ppl)
         if ppl:
             ppl = [x['name'] for x in ppl]
@@ -129,13 +129,18 @@ One or Both of the people you searched for do not exist'''
 
     common = list(set(friends1).intersection(set(friends2)))
     common = get_name_by_index(common)
-    common  = '\n'.join(common)
-    res += '\n'
-    res += '''
+    if common:
+        common  = '\n'.join(common)
+        res += '\n'
+        res += '''
 
 Friends in common:
 
 {txt}'''.format(txt=common)
+    else:
+        res += '''
+
+They don't have any friends in common who are alive and have brown eyes'''
 
     return res
 

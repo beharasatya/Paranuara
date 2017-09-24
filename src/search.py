@@ -149,8 +149,7 @@ def search():
 @route('/', method="POST")
 @route('/search/company', method="POST")
 def formhandler():
-    company = request.forms.get('company')
-    message = "You searched for '" + company + "'\n\n\n"
+    company = request.forms.get('company').strip()
     ppl = search_company(company)
     print(templates.tpl_form_cmp.format(res_tag=ppl))
     tpl = templates.tpl_start + templates.tpl_form_cmp.format(res_tag=ppl) + templates.tpl_form_ppl.format(res_tag='') + templates.tpl_end
@@ -160,8 +159,8 @@ def formhandler():
 @route('/', method="POST")
 @route('/search/people', method="POST")
 def formhandler():
-    ppl1 = request.forms.get('p1')
-    ppl2 = request.forms.get('p2')
+    ppl1 = request.forms.get('p1').strip()
+    ppl2 = request.forms.get('p2').strip()
     if ppl2:
         res = find_common(ppl1, ppl2)
     else:
